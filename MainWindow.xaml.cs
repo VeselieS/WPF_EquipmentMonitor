@@ -32,11 +32,30 @@ namespace WPF_EquipmentMonitor
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
             base.OnClosing(e);
-            if (DataContext is MainWindowViewModel vm)
+
+            if (DataContext is MainWindowViewModel vm && vm.HasUnsavedChanges)
             {
-                vm.SaveData();
+                var result = MessageBox.Show(
+                    "Есть несохранённые изменения. Сохранить перед выходом?",
+                    "Подтверждение",
+                    MessageBoxButton.YesNoCancel,
+                    MessageBoxImage.Warning);
+
+                switch (result)
+                {
+                    case MessageBoxResult.Yes:
+                        vm.SaveEditingCommand.Execute(null);
+                        break;
+                    case MessageBoxResult.No:
+                        // ничего не сохраняем
+                        break;
+                    case MessageBoxResult.Cancel:
+                        e.Cancel = true; // отменяем закрытие
+                        break;
+                }
             }
         }
+
 
     }
 }

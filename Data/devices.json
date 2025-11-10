@@ -18,7 +18,7 @@
     "Name": "srv3",
     "SerialNumber": "0003",
     "InstallationDate": "2025-11-01T00:00:00",
-    "Status": 1
+    "Status": 0
   },
   {
     "Category": "\u041C\u044B\u0448\u044C",
@@ -51,7 +51,7 @@
   {
     "Category": "\u041C\u044B\u0448\u044C",
     "Name": "ms4",
-    "SerialNumber": "1005",
+    "SerialNumber": "1004",
     "InstallationDate": "2025-11-05T00:00:00",
     "Status": 2
   }
