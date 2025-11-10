@@ -3,12 +3,12 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using WPF_EquipmentMonitor.Helpers;
 using WPF_EquipmentMonitor.Models;
-
 
 namespace WPF_EquipmentMonitor.ViewModels
 {
@@ -24,8 +24,69 @@ namespace WPF_EquipmentMonitor.ViewModels
         public Device SelectedDevice
         {
             get => _selectedDevice;
-            set => Set(ref _selectedDevice, value);
+            set
+            {
+                if (Set(ref _selectedDevice, value))
+                {
+                    if (SelectedDevice != null)
+                    {
+                        // создаем копию для редактирования
+                        EditingDevice = new Device
+                        {
+                            Category = SelectedDevice.Category,
+                            Name = SelectedDevice.Name,
+                            SerialNumber = SelectedDevice.SerialNumber,
+                            InstallationDate = SelectedDevice.InstallationDate,
+                            Status = SelectedDevice.Status
+                        };
+
+                        // подписка на изменения
+                        EditingDevice.PropertyChanged += (s, e) =>
+                        {
+                            IsModified = true;
+                            HasUnsavedChanges = true;
+                        };
+                    }
+                    else
+                    {
+                        EditingDevice = null;
+                        IsModified = false;
+                    }
+
+                    ((RelayCommand)DeleteDeviceCommand).RaiseCanExecuteChanged();
+                    ((RelayCommand)SaveEditingCommand).RaiseCanExecuteChanged();
+                }
+            }
         }
+
+        private Device _editingDevice;
+        public Device EditingDevice
+        {
+            get => _editingDevice;
+            set => Set(ref _editingDevice, value);
+        }
+
+        private bool _isModified;
+        public bool IsModified
+        {
+            get => _isModified;
+            set => Set(ref _isModified, value);
+        }
+
+        private bool _isSaved;
+        public bool IsSaved
+        {
+            get => _isSaved;
+            set => Set(ref _isSaved, value);
+        }
+
+        private bool _hasUnsavedChanges;
+        public bool HasUnsavedChanges
+        {
+            get => _hasUnsavedChanges;
+            set => Set(ref _hasUnsavedChanges, value);
+        }
+
 
         private string _searchText;
         public string SearchText
@@ -41,11 +102,11 @@ namespace WPF_EquipmentMonitor.ViewModels
             set { if (Set(ref _statusFilter, value)) DevicesView.Refresh(); }
         }
 
-        // Commands
         public ICommand AddDeviceCommand { get; }
         public ICommand DeleteDeviceCommand { get; }
         public ICommand SaveDeviceCommand { get; }
         public ICommand ClearFilterCommand { get; }
+        public ICommand SaveEditingCommand { get; }
 
         public MainWindowViewModel()
         {
@@ -61,11 +122,41 @@ namespace WPF_EquipmentMonitor.ViewModels
             SaveDeviceCommand = new RelayCommand(_ => SaveData(), _ => SelectedDevice != null);
             ClearFilterCommand = new RelayCommand(_ => { SearchText = ""; StatusFilter = null; });
 
-            this.PropertyChanged += (s, e) =>
+            SaveEditingCommand = new RelayCommand(_ =>
             {
-                if (e.PropertyName == nameof(SelectedDevice))
-                    ((RelayCommand)DeleteDeviceCommand).RaiseCanExecuteChanged();
+                if (SelectedDevice == null || EditingDevice == null) return;
+
+                // копируем свойства обратно в SelectedDevice
+                SelectedDevice.Category = EditingDevice.Category;
+                SelectedDevice.Name = EditingDevice.Name;
+                SelectedDevice.SerialNumber = EditingDevice.SerialNumber;
+                SelectedDevice.InstallationDate = EditingDevice.InstallationDate;
+                SelectedDevice.Status = EditingDevice.Status;
+
+                DevicesView.Refresh();
+                SaveData();
+
+                IsModified = false; // изменения сохранены
+                HasUnsavedChanges = false;
+                ShowSavedNotification();
+            }, _ => SelectedDevice != null && EditingDevice != null);
+
+            // отслеживаем изменения в EditingDevice для активации IsModified
+            PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(EditingDevice))
+                {
+                    if (EditingDevice != null)
+                        EditingDevice.PropertyChanged += (s2, e2) => IsModified = true;
+                }
             };
+        }
+
+        private async void ShowSavedNotification()
+        {
+            IsSaved = true;
+            await Task.Delay(2000);
+            IsSaved = false;
         }
 
         private bool FilterDevice(object obj)
@@ -73,17 +164,14 @@ namespace WPF_EquipmentMonitor.ViewModels
             if (obj is not Device d) return false;
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
-                if (!(d.Name?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false))
+                if (!(d.Name?.Contains(SearchText, System.StringComparison.OrdinalIgnoreCase) ?? false))
                     return false;
             }
             if (StatusFilter.HasValue && d.Status != StatusFilter.Value) return false;
             return true;
         }
 
-        private void OnAddDevice()
-        {
-            // Заглушка, окно добавления открывается в code-behind
-        }
+        private void OnAddDevice() { }
 
         public void AddDevice(Device device)
         {
@@ -100,6 +188,7 @@ namespace WPF_EquipmentMonitor.ViewModels
             {
                 Devices.Remove(SelectedDevice);
                 SelectedDevice = null;
+                IsModified = false;
             }
         }
 
@@ -113,7 +202,7 @@ namespace WPF_EquipmentMonitor.ViewModels
                 Devices.Clear();
                 foreach (var d in list) Devices.Add(d);
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 MessageBox.Show($"Ошибка при чтении: {ex.Message}");
             }
@@ -128,7 +217,7 @@ namespace WPF_EquipmentMonitor.ViewModels
                 File.WriteAllText(DataFile, json);
                 Debug.WriteLine($"[SaveData] Сохранено {Devices.Count} устройств в {DataFile}");
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 Debug.WriteLine($"[SaveData] Ошибка при сохранении: {ex}");
                 MessageBox.Show($"Ошибка при сохранении: {ex.Message}");

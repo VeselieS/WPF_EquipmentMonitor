@@ -87,7 +87,7 @@
 
 
         <!-- Right panel: редактирование -->
-        <StackPanel Grid.Column="1" Margin="10" DataContext="{Binding SelectedDevice}">
+        <StackPanel Grid.Column="1" Margin="10" DataContext="{Binding EditingDevice}">
             <TextBlock Text="Параметры устройства" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
             <StackPanel Orientation="Horizontal" Margin="0,4">
                 <TextBlock Text="Категория" Width="120"/>
@@ -123,8 +123,16 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
             </StackPanel>
-        </StackPanel>
 
+            <!-- Кнопка Сохранить и уведомление -->
+            <StackPanel Orientation="Horizontal" Margin="0,16">
+                <Button Content="Сохранить" Width="100" Margin="0,0,8,0"
+                Command="{Binding DataContext.SaveEditingCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                <TextBlock Text="Сохранено" Foreground="Green"
+                   VerticalAlignment="Center"
+                   Visibility="{Binding DataContext.IsSaved, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            </StackPanel>
+        </StackPanel>
     </Grid>
 </Window>
     
