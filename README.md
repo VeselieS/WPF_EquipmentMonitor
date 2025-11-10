@@ -21,6 +21,6 @@ Data
   *devices.json – файл для хранения данных устройств  
   
 **Установка и запуск**  
-git clone https://github.com/VeselieS/<WPF_EquipmentMonitor>.git  
+git clone https://github.com/VeselieS/WPF_EquipmentMonitor.git  
 Открывать в Visual Studio  
 Открыть проект - собрать решение - F5  
