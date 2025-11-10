@@ -6,19 +6,19 @@
 **Архитектура**  
 Приложение построено по паттерну MVVM:  
 Models  
-  Device  
+  *Device  
 ViewModels  
-  MainWindowViewModel  
-  AddDeviceViewModel  
-  BaseViewModel  
+  *MainWindowViewModel  
+  *AddDeviceViewModel  
+  *BaseViewModel  
 Views  
-  MainWindow.xaml  
-  AddDeviceWindow.xaml  
+  *MainWindow.xaml  
+  *AddDeviceWindow.xaml  
 Helpers  
-  RelayCommand  
-  EnumDisplayNameConverter  
+  *RelayCommand  
+  *EnumDisplayNameConverter  
 Data  
-  devices.json – файл для хранения данных устройств  
+  *devices.json – файл для хранения данных устройств  
   
 #Установка и запуск  
 git clone WPF_EquipmentMonitor  
